@@ -1,0 +1,2 @@
+### healthcheck
+GET localhost:8000/healthcheck

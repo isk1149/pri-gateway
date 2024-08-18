@@ -1,0 +1,55 @@
+server:
+  port: 8000
+
+eureka:
+  instance:
+    instance-id: ${spring.application.name}:${spring.application.instance_id:${random.value}} #Eureka 클라이언트가 Eureka 서버에 등록될 때 사용할 인스턴스 ID를 지정
+  client:
+    register-with-eureka: true
+    fetch-registry: true
+    service-url:
+      defaultZone: http://localhost:8761/eureka
+
+spring:
+  application:
+    name: pri-gateway
+  cloud:
+    gateway:
+      globalCors: # Spring Cloud Gateway의 전역적인 CORS 설정을 정의함. 이 설정은 모든 경로에 공통적으로 적용됨.
+        corsConfigurations: # 특정 경로 패턴에 대해 CORS 설정을 정의.
+          '[/**]': # 모든 경로에 대해 CORS 설정
+            allowedOrigins: "http://localhost:3000" # 이 주소에서 오는 모든 요청은 CORS 정책에 의해 허용됨.
+            allowedMethods:
+              - GET
+              - POST
+              - PUT
+              - PATCH
+              - DELETE
+              - OPTIONS # 사전 요청을 허용. 브라우저는 CORS 요청 전에 이 메서드를 사용해 서버의 정책을 확인함.
+            allowedHeaders:
+              - "*"
+            allowCredentials: true # 클라이언트에서 쿠키, 인증 정보 등 자격 증명을 포함한 요청을 허용할지를 결정.
+            maxAge: 3600 # 사전 요청(OPTIONS 요청)에 대한 캐시 기간을 설정.
+                         # 3600초(1시간) 동안 브라우저가 사전 요청에 대한 결과를 캐시할 수 있음을 의미.
+                         # 이 시간 동안 동일한 CORS 요청이 발생해도 다시 사전 요청을 보내지 않고 캐시된 결과를 사용.
+      default-filters: # Spring Cloud Gateway에서 모든 라우트에 기본적으로 적용될 필터들을 정의함.
+        - name: GlobalFilter # Spring Cloud Gateway의 AbstractGatewayFilterFactory를 확장하여 만든 커스텀 필터 클래스
+          args: # 필터에 전달될 매개변수를 정의.
+            baseMessage: GlobalFilter
+            preLogger: true
+            postLogger: true
+      routes:
+        - id: pri-board-service # id는 라우트의 고유 식별자를 의미. 라우트를 구분하거나 로깅 등의 작업에서 사용함.
+          uri: lb://PRI-BOARD-SERVICE # uri는 요청을 전달할 대상의 주소를 정의.
+                                      # lb://는 로드 밸런싱(load balancer)을 의미.
+                                      # PRI-BOARD-SERVICE는 Eureka 서비스 레지스트리에서 등록된 서비스의 이름
+                                      # 이 설정은 들어오는 요청을 PRI-BOARD-SERVICE라는 이름으로 등록된 서비스 인스턴스 중 하나로 라우팅함.
+                                      # Spring Cloud Gateway는 서비스 레지스트리에서 PRI-BOARD-SERVICE의 인스턴스를 조회하고, 그 중 하나로 트래픽을 분산시킴.
+          predicates: # predicates는 이 라우트가 언제 활성화될지를 결정하는 조건을 정의
+            - Path=/board-service/** # Path 프레디케이트는 요청 URL의 경로가 특정 패턴과 일치할 때 라우트를 활성화함
+                                     # Path=/board-service/**는 요청의 경로가 /board-service/로 시작하고 그 뒤에 어떤 경로가 오든지 상관없이 이 라우트가 활성화되도록 설정
+          filters: # 라우트에 적용될 필터들을 정의. 필터는 요청을 라우팅하기 전에, 또는 응답을 반환하기 전에 요청이나 응답을 조작할 수 있음.
+                   # RewritePath는 Spring Cloud Gateway에서 제공하는 기본 필터 중 하나로, 요청 경로를 특정 패턴에 따라 재작성하는 데 사용
+                   # RewritePath 필터는 클라이언트로부터 들어온 원본 요청 경로를 변경하여, 백엔드 서비스로 전달될 때 경로를 재구성함.
+            - RewritePath=/board-service/(?<segment>.*), /$\{segment} # /board-service/ 뒤에 붙는 경로를 추출(segment)하여 서비스에 /segment 경로를 전달
+                                                                      # ex) /board-service/healthcheck -> /healthcheck 로 변환하여 서비스에 전달
