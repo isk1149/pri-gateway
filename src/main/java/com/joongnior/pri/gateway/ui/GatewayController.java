@@ -1,4 +1,4 @@
-package com.joongnior.pri_gateway.ui;
+package com.joongnior.pri.gateway.ui;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.core.env.Environment;

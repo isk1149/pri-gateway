@@ -1,4 +1,4 @@
-package com.joongnior.pri_gateway.filter;
+package com.joongnior.pri.gateway.filter;
 
 import lombok.Getter;
 import lombok.Setter;
