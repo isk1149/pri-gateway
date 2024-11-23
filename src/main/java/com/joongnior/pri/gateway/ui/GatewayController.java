@@ -23,6 +23,7 @@ public class GatewayController {
          * MIME(Multipurpose Internet Mail Extensions type):
          *  인터넷 상에서 전송되는 데이터의 형식을 표현하기 위한 표준 포맷이다.
          *  MIME 타입은 클라이언트와 서버 간 통신에서 데이터가 어떤 형식인지 식별할 수 있게 한다.
+         *  서버는 응답 헤더의 Content-Type에 MIME 타입을 지정하여 클라이언트에게 데이터 형식을 알린다.
          */
         String lineSeparator = "\n";
 
