@@ -1,2 +1,6 @@
 ### healthcheck
 GET localhost:8000/healthcheck
+
+### healthcheck using accept header
+GET localhost:8000/healthcheck
+Accept: text/html
